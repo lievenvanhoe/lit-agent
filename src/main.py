@@ -25,7 +25,7 @@ def main():
 
     # Step 2: Filter for relevance using Claude
     print(f"\n[2/3] Filtering {len(papers)} papers for relevance...")
-    relevant = filter_relevant(papers, min_score=3)
+    relevant = filter_relevant(papers, min_score=4)
     print(f"→ {len(relevant)} relevant papers after filtering")
 
     if not relevant:
