@@ -1,0 +1,29 @@
+name: Daily Literature Digest
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run literature agent
+        working-directory: src
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SENDGRID_API_KEY:  ${{ secrets.SENDGRID_API_KEY }}
+          TO_EMAIL:          ${{ secrets.TO_EMAIL }}
+          FROM_EMAIL:        ${{ secrets.FROM_EMAIL }}
+          FROM_NAME:         "Radiology Lit Agent"
+        run: python main.py
