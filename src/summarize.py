@@ -1,6 +1,5 @@
 """
 Relevance filtering and summarization using the Claude API.
-Each paper is scored for relevance, then a digest is generated.
 """
 
 import os
@@ -34,11 +33,10 @@ Be strict. When in doubt, reject.
 Respond ONLY with valid JSON. No preamble, no markdown fences.
 Schema: {"relevant": true/false, "score": 1-5, "reason": "one sentence", "component": "component name"}
 """
-"""
 
 DIGEST_SYSTEM = """Write a short HTML email digest of radiology report generation papers.
 
-Group by component using <h2>. For each paper: <h3> title as hyperlink, authors in <small>, one sentence summary.
+Group by component using <h2>. For each paper: <h3> title as hyperlink, authors in <small>, one sentence summary in <p>.
 
 Keep total output under 2000 characters. No wrapper tags.
 """
@@ -67,8 +65,7 @@ def call_claude(system: str, user: str) -> str:
     return data["content"][0]["text"]
 
 
-def filter_relevant(papers: list[dict], min_score: int = 3) -> list[dict]:
-    """Score each paper for relevance; keep those at or above min_score."""
+def filter_relevant(papers: list[dict], min_score: int = 4) -> list[dict]:
     relevant = []
     for p in papers:
         user_msg = f"""Title: {p['title']}
@@ -80,52 +77,4 @@ Abstract: {p['abstract']}"""
             score = int(result.get("score", 0))
             print(f"  Score {score}/5 — {p['title'][:60]}...")
             if result.get("relevant") and score >= min_score:
-                p["relevance_score"] = score
-                p["relevance_reason"] = result.get("reason", "")
-                p["pipeline_component"] = result.get("component", "General")
-                relevant.append(p)
-        except Exception as e:
-            print(f"  Filtering error for '{p['title'][:40]}': {e}")
-
-    relevant.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
-    return relevant
-
-
-def generate_digest(papers: list[dict]) -> str:
-    """Generate an HTML digest of the relevant papers."""
-    if not papers:
-        return "<p>No new relevant papers found today.</p>"
-
-    papers_json = json.dumps([
-        {
-            "title": p["title"],
-            "authors": p["authors"],
-            "url": p["url"],
-            "abstract": p["abstract"],
-            "source": p["source"],
-            "relevance_reason": p.get("relevance_reason", ""),
-            "pipeline_component": p.get("pipeline_component", "General"),
-        }
-        for p in papers
-    ], indent=2)
-
-    html = call_claude(DIGEST_SYSTEM, f"Papers to summarize:\n{papers_json}")
-    return html
-
-
-if __name__ == "__main__":
-    # Quick test with a dummy paper
-    test_papers = [{
-        "source": "arXiv",
-        "title": "LLM-based Automated Radiology Report Generation from Chest CT",
-        "authors": "Smith J, Jones A, et al.",
-        "abstract": "We propose a large language model pipeline for automated generation of radiology reports from chest CT scans, achieving radiologist-level performance on a held-out test set.",
-        "url": "https://arxiv.org/abs/2501.00000",
-    }]
-    print("Testing relevance filter...")
-    relevant = filter_relevant(test_papers, min_score=2)
-    print(f"Relevant: {len(relevant)}")
-    if relevant:
-        print("\nGenerating digest...")
-        digest = generate_digest(relevant)
-        print(digest[:500])
+                p["rele
