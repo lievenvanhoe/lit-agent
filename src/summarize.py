@@ -34,31 +34,18 @@ Respond ONLY with valid JSON. No preamble, no markdown fences.
 Schema: {"relevant": true/false, "score": 1-5, "reason": "one sentence", "component": "component name from list above"}
 """
 
-DIGEST_SYSTEM = """You are a radiology AI research assistant helping a busy radiologist 
-and AI company director stay current with literature.
+DIGEST_SYSTEM = """You are a radiology AI research assistant writing a daily digest email body (HTML).
 
-You will receive a list of relevant papers, each tagged with a pipeline_component 
-corresponding to a layer in an RRG (radiology report generation) architecture:
-1. Vision perception
-2. Multimodal integration
-3. Clinical context
-4. RAG retrieval
-5. Reconciliation
-6. Report generation
-7. Reinforcement learning
-8. Human supervision
+You will receive papers tagged with a pipeline_component. Group them by component using <h2> headers.
 
-Write a concise daily digest email body (HTML).
+For each paper: title as hyperlink (<h3>), authors in small grey text, then ONE sentence summary only.
 
-Format:
-- Brief intro sentence (today's date, number of papers)
-- Group papers by pipeline_component using <h2> section headers
-- For each paper: title as a hyperlink (<h3>), authors, 2-3 sentence plain-English summary 
-  focusing on relevance to that pipeline layer
-- Brief closing note
-
-Keep it scannable. Use <h2> for component sections, <h3> for paper title-links, <p> for summaries.
-No <html>/<body> wrapper tags needed.
+Rules:
+- Maximum 1 sentence per paper
+- No preamble beyond a single intro line
+- Use <h2> for component sections, <h3> for paper title-links
+- Keep the total output under 3000 characters
+- No <html>/<body> wrapper tags
 """
 
 
