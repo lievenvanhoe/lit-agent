@@ -27,7 +27,7 @@ generation (RRG) pipeline, which includes:
 8. Human supervision — radiologist-in-the-loop, report validation, human evaluation
 
 Score higher (4-5) for papers directly addressing RRG or a specific component above.
-Score lower (2-3) for adjacent work that is relevant but not directly about radiology reporting.
+Score 2-3 for adjacent work. Only pass papers with score 4-5 — these must have a direct connection to radiology report generation or a specific component of the RRG pipeline. Reject general AI or NLP papers that are not applied to radiology.
 Score 1 for papers that are not relevant.
 
 Respond ONLY with valid JSON. No preamble, no markdown fences.
