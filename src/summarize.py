@@ -11,41 +11,36 @@ import urllib.request
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 MODEL = "claude-sonnet-4-20250514"
 
-RELEVANCE_SYSTEM = """You are a radiology AI research assistant helping a radiologist 
-and AI company director stay up to date on the latest research.
+RELEVANCE_SYSTEM = """You are a strict relevance filter for a radiology report generation (RRG) research digest.
 
-Your job: assess whether a paper is relevant to any component of a radiology report 
-generation (RRG) pipeline, which includes:
+A paper is ONLY relevant if it directly addresses one of these:
+1. Generating radiology reports from medical images using AI/LLMs
+2. LLMs or transformers applied specifically to radiology report text
+3. Multimodal models that take radiology images as input AND produce report text as output
+4. RAG systems specifically for retrieving radiology guidelines or similar cases to aid report generation
+5. Hallucination or factual grounding specifically in radiology report generation
+6. Fine-tuning or RLHF specifically for radiology report generation models
+7. Human-in-the-loop validation of AI-generated radiology reports
 
-1. Vision perception — vision transformers, image encoders, DICOM/PACS processing
-2. Multimodal integration — vision-language alignment, cross-modal fusion
-3. Clinical context — EMR integration, clinical NLP, patient history
-4. RAG retrieval — guideline retrieval, similar case retrieval, institutional templates
-5. Reconciliation — factual grounding, hallucination detection, finding prioritization
-6. Report generation — multimodal LLMs, instruction fine-tuning, prompt engineering
-7. Reinforcement learning — RLHF, RLAIF, reward modeling for medical text
-8. Human supervision — radiologist-in-the-loop, report validation, human evaluation
+REJECT papers about:
+- General image classification, detection, or segmentation without report generation
+- Image super-resolution or image quality
+- General NLP or LLMs not applied to radiology reports
+- General medical AI not related to report generation
+- Radiology education, scheduling, billing
 
-Score higher (4-5) for papers directly addressing RRG or a specific component above.
-Score 2-3 for adjacent work. Only pass papers with score 4-5 — these must have a direct connection to radiology report generation or a specific component of the RRG pipeline. Reject general AI or NLP papers that are not applied to radiology.
-Score 1 for papers that are not relevant.
+Be strict. When in doubt, reject.
 
 Respond ONLY with valid JSON. No preamble, no markdown fences.
-Schema: {"relevant": true/false, "score": 1-5, "reason": "one sentence", "component": "component name from list above"}
+Schema: {"relevant": true/false, "score": 1-5, "reason": "one sentence", "component": "component name"}
+"""
 """
 
-DIGEST_SYSTEM = """You are a radiology AI research assistant writing a daily digest email body (HTML).
+DIGEST_SYSTEM = """Write a short HTML email digest of radiology report generation papers.
 
-You will receive papers tagged with a pipeline_component. Group them by component using <h2> headers.
+Group by component using <h2>. For each paper: <h3> title as hyperlink, authors in <small>, one sentence summary.
 
-For each paper: title as hyperlink (<h3>), authors in small grey text, then ONE sentence summary only.
-
-Rules:
-- Maximum 1 sentence per paper
-- No preamble beyond a single intro line
-- Use <h2> for component sections, <h3> for paper title-links
-- Keep the total output under 3000 characters
-- No <html>/<body> wrapper tags
+Keep total output under 2000 characters. No wrapper tags.
 """
 
 
