@@ -26,4 +26,5 @@ jobs:
           TO_EMAIL:          ${{ secrets.TO_EMAIL }}
           FROM_EMAIL:        ${{ secrets.FROM_EMAIL }}
           FROM_NAME:         "Radiology Lit Agent"
+          TO_EMAIL_2: ${{ secrets.TO_EMAIL_2 }}
         run: python main.py
