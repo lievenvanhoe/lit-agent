@@ -13,6 +13,7 @@ SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
 FROM_EMAIL       = os.environ.get("FROM_EMAIL", "alerts@yourdomain.com")
 FROM_NAME        = os.environ.get("FROM_NAME", "Radiology Lit Agent")
 TO_EMAIL         = os.environ["TO_EMAIL"]
+TO_EMAIL_2       = os.environ.get("TO_EMAIL_2", "")
 
 
 EMAIL_TEMPLATE = """\
@@ -65,7 +66,7 @@ def send_digest(html_body: str, paper_count: int) -> bool:
     subject = f"Radiology AI Digest — {today} ({paper_count} new paper{plural})"
 
     payload = json.dumps({
-        "personalizations": [{"to": [{"email": TO_EMAIL}]}],
+        "personalizations": [{"to": [e for e in [{"email": TO_EMAIL}, {"email": TO_EMAIL_2} if TO_EMAIL_2 else None] if e]}],
         "from": {"email": FROM_EMAIL, "name": FROM_NAME},
         "subject": subject,
         "content": [{"type": "text/html", "value": html}],
