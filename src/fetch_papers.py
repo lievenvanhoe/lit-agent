@@ -38,7 +38,7 @@ ARXIV_QUERIES = [
     "human supervision radiology AI report validation",
 ]
 
-DAYS_BACK = 7
+DAYS_BACK = 2
 MAX_RESULTS = 10
 PUBMED_DELAY = 0.4
 
