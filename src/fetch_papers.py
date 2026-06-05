@@ -12,22 +12,20 @@ PUBMED_QUERIES = [
     "retrieval augmented generation radiology clinical",
     "hallucination radiology report large language model",
     "instruction fine-tuning radiology language model",
-    "radiologist-in-the-loop AI report validation",
+    "radiologist AI report validation",
 ]
 
 ARXIV_QUERIES = [
     "radiology report generation LLM",
-    "automated radiology report large language model",
-    "multimodal alignment vision language radiology",
-    "retrieval augmented generation radiology report",
-    "hallucination medical report LLM radiology",
-    "instruction tuning radiology report model",
-    "human supervision radiology AI report validation",
+    "automated radiology report language model",
+    "multimodal radiology vision language",
+    "retrieval augmented radiology report",
+    "hallucination medical report generation",
 ]
 
-DAYS_BACK = 7
-MAX_RESULTS = 10
-DELAY = 0.5
+DAYS_BACK = 14
+MAX_RESULTS = 15
+DELAY = 1.0
 
 
 def pubmed_search(query):
@@ -42,7 +40,8 @@ def pubmed_search(query):
     })
     search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?" + search_params
     try:
-        with urllib.request.urlopen(search_url, timeout=15) as resp:
+        req = urllib.request.Request(search_url, headers={"User-Agent": "Mozilla/5.0 (research bot; mailto:research@example.com)"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
             search_data = json.loads(resp.read())
         pmids = search_data.get("esearchresult", {}).get("idlist", [])
         if not pmids:
@@ -55,7 +54,8 @@ def pubmed_search(query):
             "rettype": "abstract",
         })
         fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?" + fetch_params
-        with urllib.request.urlopen(fetch_url, timeout=15) as resp:
+        req2 = urllib.request.Request(fetch_url, headers={"User-Agent": "Mozilla/5.0 (research bot; mailto:research@example.com)"})
+        with urllib.request.urlopen(req2, timeout=15) as resp:
             xml_data = resp.read()
         root = ET.fromstring(xml_data)
         papers = []
@@ -85,7 +85,7 @@ def pubmed_search(query):
                 continue
         return papers
     except Exception as e:
-        print("PubMed error: " + str(e))
+        print("PubMed error for '" + query[:40] + "': " + str(e))
         return []
 
 
@@ -99,7 +99,8 @@ def arxiv_search(query):
     })
     url = "https://export.arxiv.org/api/query?" + params
     try:
-        with urllib.request.urlopen(url, timeout=15) as resp:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (research bot)"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
             xml_data = resp.read()
         ns = {"atom": "http://www.w3.org/2005/Atom"}
         root = ET.fromstring(xml_data)
@@ -133,7 +134,7 @@ def arxiv_search(query):
                 continue
         return papers
     except Exception as e:
-        print("arXiv error: " + str(e))
+        print("arXiv error for '" + query[:40] + "': " + str(e))
         return []
 
 
@@ -161,7 +162,7 @@ def fetch_all_papers():
         results = arxiv_search(q)
         print("  [" + q[:50] + "] -> " + str(len(results)) + " papers")
         papers.extend(results)
-        time.sleep(0.3)
+        time.sleep(2.0)
     papers = deduplicate(papers)
     print("Total unique papers: " + str(len(papers)))
     return papers
