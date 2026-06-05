@@ -24,7 +24,7 @@ RELEVANCE_SYSTEM = (
 DIGEST_SYSTEM = (
     "Write a short HTML email digest of radiology AI papers.\n"
     "Group by topic using <h2>. For each paper: <h3> title as hyperlink, <small> authors, <p> one sentence summary.\n"
-    "Keep total under 2000 characters. No html/body tags."
+    "Keep total under 8000 characters. No html/body tags."
 )
 
 
