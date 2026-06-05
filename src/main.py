@@ -13,7 +13,7 @@ def main():
 
     if not papers:
         print("No papers found.")
-        send_digest("<p>No new papers found today.</p>", 0)
+        send_digest("<p>No new papers found today.</p>", 0, "")
         sys.exit(0)
 
     print("\n[2/3] Filtering " + str(len(papers)) + " papers...")
@@ -21,8 +21,13 @@ def main():
     print("-> " + str(len(relevant)) + " relevant papers after filtering")
 
     print("\n[3/3] Generating digest and sending email...")
-    digest_html = generate_digest(relevant)
-    send_digest(digest_html, len(relevant))
+    digests = generate_digest(relevant)
+    total = len(relevant)
+    
+    for i, digest_html in enumerate(digests):
+        part = " (Part " + str(i+1) + " of " + str(len(digests)) + ")" if len(digests) > 1 else ""
+        send_digest(digest_html, total, part)
+    
     print("\nAgent run complete.")
 
 if __name__ == "__main__":
