@@ -41,11 +41,11 @@ small{color:#888;font-size:12px}
 </html>"""
 
 
-def send_digest(html_body, paper_count):
+def send_digest(html_body, paper_count, part=""):
     today = datetime.date.today().strftime("%B %d, %Y")
     plural = "s" if paper_count != 1 else ""
     html = EMAIL_TEMPLATE.replace("{date}", today).replace("{count}", str(paper_count)).replace("{plural}", plural).replace("{body}", html_body)
-    subject = "Radiology AI Digest - " + today + " (" + str(paper_count) + " new paper" + plural + ")"
+    subject = "Radiology AI Digest - " + today + " (" + str(paper_count) + " new paper" + plural + ")" + part
 
     recipients = [TO_EMAIL]
     if TO_EMAIL_2:
