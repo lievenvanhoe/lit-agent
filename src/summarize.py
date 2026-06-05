@@ -23,15 +23,15 @@ RELEVANCE_SYSTEM = (
 
 DIGEST_SYSTEM = (
     "Write a short HTML email digest of radiology AI papers.\n"
-    "Group by topic using <h2>. For each paper: <h3> title as hyperlink, <small> authors, <p> one sentence summary.\n"
-    "Show maximum 8 papers only. One line per paper: <h3> title as hyperlink, <small> authors</small>. No summaries. No html/body tags."
+    "Group by topic using <h2>. For each paper: <h3> title as hyperlink, <small> authors</small>, <p> one sentence summary.</p>\n"
+    "No html/body tags."
 )
 
 
 def call_claude(system, user):
     payload = json.dumps({
         "model": MODEL,
-        "max_tokens": 300,
+        "max_tokens": 2000,
         "system": system,
         "messages": [{"role": "user", "content": user}],
     }).encode()
@@ -78,12 +78,22 @@ def filter_relevant(papers, min_score=2):
 
 def generate_digest(papers):
     if not papers:
-        return "<p>No new relevant papers found today.</p>"
-    papers_json = json.dumps([{
-        "title": p["title"],
-        "authors": p["authors"],
-        "url": p["url"],
-        "abstract": p["abstract"][:300],
-        "component": p.get("pipeline_component", "General"),
-    } for p in papers], indent=2)
-    return call_claude(DIGEST_SYSTEM, "Papers:\n" + papers_json)
+        return ["<p>No new relevant papers found today.</p>"]
+    
+    BATCH_SIZE = 8
+    batches = [papers[i:i+BATCH_SIZE] for i in range(0, len(papers), BATCH_SIZE)]
+    digests = []
+    
+    for i, batch in enumerate(batches):
+        part_label = " (Part " + str(i+1) + " of " + str(len(batches)) + ")" if len(batches) > 1 else ""
+        papers_json = json.dumps([{
+            "title": p["title"],
+            "authors": p["authors"],
+            "url": p["url"],
+            "abstract": p["abstract"][:300],
+            "component": p.get("pipeline_component", "General"),
+        } for p in batch], indent=2)
+        html = call_claude(DIGEST_SYSTEM, "Papers" + part_label + ":\n" + papers_json)
+        digests.append(html)
+    
+    return digests
