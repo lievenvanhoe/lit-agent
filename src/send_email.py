@@ -1,11 +1,13 @@
 import os
 import json
 import datetime
-import urllib.request
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
-SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
-FROM_EMAIL = os.environ.get("FROM_EMAIL", "alerts@example.com")
-FROM_NAME = os.environ.get("FROM_NAME", "Radiology Lit Agent")
+GMAIL_USER = os.environ["GMAIL_USER"]
+GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
 TO_EMAIL = os.environ["TO_EMAIL"]
 TO_EMAIL_2 = os.environ.get("TO_EMAIL_2", "")
 
@@ -21,7 +23,6 @@ body{font-family:Georgia,serif;max-width:680px;margin:0 auto;padding:24px;color:
 h2{color:#1a3a5c;border-bottom:1px solid #eee;padding-bottom:4px}
 h3{margin-top:16px;margin-bottom:4px;font-size:15px}
 h3 a{color:#1a3a5c;text-decoration:none}
-h3 a:hover{text-decoration:underline}
 p{margin:4px 0 12px;font-size:14px;line-height:1.6;color:#333}
 small{color:#888;font-size:12px}
 .footer{font-size:12px;color:#888;margin-top:24px;border-top:1px solid #eee;padding-top:12px}
@@ -45,29 +46,25 @@ def send_digest(html_body, paper_count):
     plural = "s" if paper_count != 1 else ""
     html = EMAIL_TEMPLATE.replace("{date}", today).replace("{count}", str(paper_count)).replace("{plural}", plural).replace("{body}", html_body)
     subject = "Radiology AI Digest - " + today + " (" + str(paper_count) + " new paper" + plural + ")"
-    to_list = [{"email": TO_EMAIL}]
+
+    recipients = [TO_EMAIL]
     if TO_EMAIL_2:
-        to_list.append({"email": TO_EMAIL_2})
-    payload = json.dumps({
-        "personalizations": [{"to": to_list}],
-        "from": {"email": FROM_EMAIL, "name": FROM_NAME},
-        "subject": subject,
-        "content": [{"type": "text/html", "value": html}],
-    }).encode()
-    req = urllib.request.Request(
-        "https://api.sendgrid.com/v3/mail/send",
-        data=payload,
-        headers={
-            "Authorization": "Bearer " + SENDGRID_API_KEY,
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
+        recipients.append(TO_EMAIL_2)
+
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            if resp.status == 202:
-                print("Email sent to " + str(len(to_list)) + " recipient(s) (" + str(paper_count) + " papers)")
-                return True
-    except urllib.error.HTTPError as e:
-        print("SendGrid error " + str(e.code) + ": " + e.read().decode())
-    return False
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = GMAIL_USER
+        msg["To"] = ", ".join(recipients)
+        msg.attach(MIMEText(html, "html"))
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.sendmail(GMAIL_USER, recipients, msg.as_string())
+
+        print("Email sent to " + str(len(recipients)) + " recipient(s) (" + str(paper_count) + " papers)")
+        return True
+    except Exception as e:
+        print("Email error: " + str(e))
+        return False
