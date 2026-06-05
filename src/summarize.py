@@ -6,7 +6,7 @@ ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 MODEL = "claude-sonnet-4-5"
 
 RELEVANCE_SYSTEM = (
-    "You are a relevance filter for a radiology report generation (RRG) research digest.\n\n"
+    "You are a relevance filter for a radiology report generation research digest.\n\n"
     "Accept a paper if it is about ANY of these topics:\n"
     "1. AI or LLM systems that generate radiology reports from images\n"
     "2. Vision-language models applied to radiology\n"
@@ -15,10 +15,10 @@ RELEVANCE_SYSTEM = (
     "5. Hallucination or factual accuracy in medical report generation\n"
     "6. Fine-tuning or reinforcement learning for radiology LLMs\n"
     "7. Human-AI collaboration in radiology reporting\n\n"
-    "Be generous - if the paper is related to radiology AND AI/LLM/NLP, accept it.\n"
+    "Be generous - if the paper is related to radiology AND AI, accept it.\n"
     "Only reject papers completely unrelated to radiology reporting.\n\n"
-    "Respond ONLY with valid JSON, no markdown.\n"
-    "Schema: {\"relevant\": true/false, \"score\": 1-5, \"reason\": \"one sentence\", \"component\": \"component name\"}"
+    "You MUST respond ONLY with a JSON object. No other text.\n"
+    "Example: {\"relevant\": true, \"score\": 4, \"reason\": \"directly about RRG\", \"component\": \"Report generation\"}"
 )
 
 DIGEST_SYSTEM = (
@@ -31,7 +31,7 @@ DIGEST_SYSTEM = (
 def call_claude(system, user):
     payload = json.dumps({
         "model": MODEL,
-        "max_tokens": 800,
+        "max_tokens": 300,
         "system": system,
         "messages": [{"role": "user", "content": user}],
     }).encode()
@@ -46,17 +46,23 @@ def call_claude(system, user):
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=30) as resp:
-        data = json.loads(resp.read())
+        raw = resp.read()
+        data = json.loads(raw)
     return data["content"][0]["text"]
 
 
 def filter_relevant(papers, min_score=2):
     relevant = []
     for p in papers:
-        user_msg = "Title: " + p["title"] + "\nAuthors: " + p["authors"] + "\nAbstract: " + p["abstract"]
+        user_msg = "Title: " + p["title"] + "\nAbstract: " + p["abstract"][:500]
         try:
-            raw = call_claude(RELEVANCE_SYSTEM, user_msg)
-            result = json.loads(raw)
+            text = call_claude(RELEVANCE_SYSTEM, user_msg)
+            text = text.strip()
+            if text.startswith("```"):
+                text = text.split("```")[1]
+                if text.startswith("json"):
+                    text = text[4:]
+            result = json.loads(text)
             score = int(result.get("score", 0))
             print("  Score " + str(score) + "/5 - " + p["title"][:60])
             if result.get("relevant") and score >= min_score:
