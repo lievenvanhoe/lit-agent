@@ -23,8 +23,8 @@ ARXIV_QUERIES = [
     "hallucination medical report generation",
 ]
 
-DAYS_BACK = 90
-MAX_RESULTS = 50
+DAYS_BACK = 14
+MAX_RESULTS = 15
 DELAY = 1.0
 
 
